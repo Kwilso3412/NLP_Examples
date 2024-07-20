@@ -224,61 +224,61 @@ class nlp:
         print(classification_report(y_true, y_pred))
 
 
-    # Prepare training data (replace with your labled data)
-    def train_and_evaluate_model(self, nlp, train_data, num_epochs=10):
-        '''
-        Example.from_dict(doc, sample):
-        This creates a spaCy Example object, which pairs the processed document (doc) with its correct labels (from sample). This is how spaCy knows what the correct output should be for this example.
-        
-        nlp.update([gold], drop=0.5): 
-        This is where the actual learning happens. It updates the model's parameters based on this example. The drop=0.5 is a dropout rate, which helps prevent overfitting.
-        '''
-        # split the data
-        x_train, x_test = train_test_split(train_data, test_size = 0.3, random_state=42)
-        x_hold, x_val = train_test_split(x_test, test_size=0.5) 
+   def train_and_evaluate_model(nlp, train_data, num_epochs=10):
+    '''
+    Example.from_dict(doc, sample):
+    This creates a spaCy Example object, which pairs the processed document (doc) with its correct labels (from sample). This is how spaCy knows what the correct output should be for this example.
+    
+    nlp.update([gold], drop=0.5): 
+    This is where the actual learning happens. It updates the model's parameters based on this example. The drop=0.5 is a dropout rate, which helps prevent overfitting.
+    '''
+    # split the data
+    x_train, x_test = train_test_split(train_data, test_size = 0.3, random_state=42)
+    x_hold, x_val = train_test_split(x_test, test_size=0.5) 
 
-        # randomize the data
-        random.seed(42)
-        # if there is not a predefined pipeline already added for example nlp.add_pipe("sentencizer") or nlp.add_pipe("parser")
-        if 'textcat' not in nlp.pipe_names:
-            textcat = nlp.add_pipe("textcat")
-            for label in ["positive", "negative", "neutral"]:
-                textcat.add_label(label)
-        else:
-            textcat = nlp.get_pipe("textcat")
+    # randomize the data
+    random.seed(42)
+    # if there is not a predefined pipeline already added for example nlp.add_pipe("sentencizer") or nlp.add_pipe("parser")
+    if 'textcat' not in nlp.pipe_names:
+        textcat = nlp.add_pipe("textcat")
+        for label in ["positive", "negative", "neutral"]:
+            textcat.add_label(label)
+    else:
+        textcat = nlp.get_pipe("textcat")
 
-        optimizer = nlp.initialize() 
+    optimizer = nlp.initialize() 
 
-        # train the model 
-        print('first round of training')
-        for epoch in range(num_epochs):
-            random.shuffle(train_data)
-            for sample in x_train:
-                doc = nlp.make_doc(sample['text'])
-                gold = Example.from_dict(doc, sample)
-                nlp.update([gold], sgd=optimizer, drop=0.5)
-        print('\n Training Results: ')
-        self.report_of_model(nlp, x_train, "Training Step")
-    # validate the model
-        print('second round of training')
-        for epoch in range(num_epochs):
-            for sample in x_val:
-                doc = nlp.make_doc(sample['text'])
-                gold = Example.from_dict(doc, sample)
-                nlp.update([gold], sgd=optimizer, drop=0.5)
-        print('\n Validation Results')
-        self.report_of_model(nlp, x_val, "validation Step")
-    # test the model
-        print('third round of training')
-        for epoch in range(num_epochs):
-            for sample in x_hold:
-                doc = nlp.make_doc(sample['text'])
-                gold = Example.from_dict(doc, sample)
-                nlp.update([gold], sgd=optimizer, drop=0.5)
-        print('\n Test Results')
-        self.report_of_model(nlp,x_hold , "Final Test")
+    # train the model 
+    print('first round of training')
+    for epoch in range(num_epochs):
+        random.shuffle(train_data)
+        for sample in x_train:
+            doc = nlp.make_doc(sample['text'])
+            gold = Example.from_dict(doc, sample)
+            nlp.update([gold], sgd=optimizer, drop=0.5)
+    print('\n Training Results: ')
+    report_of_model(nlp, x_train, "Training Step")
 
-        return nlp
+    print('second round of training')
+    for epoch in range(num_epochs):
+        for sample in x_val:
+            doc = nlp.make_doc(sample['text'])
+            gold = Example.from_dict(doc, sample)
+            nlp.update([gold], sgd=optimizer, drop=0.5)
+    print('\n Validation Results')
+    report_of_model(nlp, x_val, "validation Step")
+
+    print('third round of training')
+    for epoch in range(num_epochs):
+        for sample in x_hold:
+            doc = nlp.make_doc(sample['text'])
+            gold = Example.from_dict(doc, sample)
+            nlp.update([gold], sgd=optimizer, drop=0.5)
+    print('\n Test Results')
+    report_of_model(nlp,x_hold , "Final Test")
+
+    joblib.dump(nlp, "sentiment_model.joblib")
+    return nlp
     '''
     ## Sample usuage:
     nlp = spacy.blank("en")
