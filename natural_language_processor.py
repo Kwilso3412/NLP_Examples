@@ -284,6 +284,86 @@ class nlp:
     nlp = spacy.blank("en")
     train_and_evaluate_model(nlp, train_data)
     '''
+
+
+   ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    For dataframe input it will need to be structed in a certain format. See code for explianation
+   '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+    def train_and_evaluate_model(nlp, train_data, num_epochs=10):
+    '''
+    Example.from_dict(doc, sample):
+    This creates a spaCy Example object, which pairs the processed document (doc) with its correct labels (from sample). This is how spaCy knows what the correct output should be for this example.
+    
+    nlp.update([gold], drop=0.5): 
+    This is where the actual learning happens. It updates the model's parameters based on this example. The drop=0.5 is a dropout rate, which helps prevent overfitting.
+    '''
+    # needs to be in this format
+    # Ensure train_data is a DataFrame
+    if not isinstance(train_data, pd.DataFrame):
+        raise TypeError("train_data must be a pandas DataFrame")
+    
+    # Check if required columns exist
+    if 'text' not in train_data.columns or 'cats' not in train_data.columns:
+        raise ValueError("train_data must have column labels 'text' and 'cats'")
+
+    # split the data
+    x_train, x_test = train_test_split(train_data, test_size = 0.3, random_state=42)
+    x_hold, x_val = train_test_split(x_test, test_size=0.5) 
+
+    # randomize the data
+    random.seed(42)
+    # if there is not a predefined pipeline already added for example nlp.add_pipe("sentencizer") or nlp.add_pipe("parser")
+    if 'textcat' not in nlp.pipe_names:
+        textcat = nlp.add_pipe("textcat")
+        for label in ["positive", "negative", "neutral"]:
+            textcat.add_label(label)
+    else:
+        textcat = nlp.get_pipe("textcat")
+
+    optimizer = nlp.initialize() 
+
+    # train the model 
+    print('first round of training')
+    for epoch in range(num_epochs):
+        shuffled_data = x_train.sample (frac =1, random_state = 42).reset_index(drop=True)
+        for i, sample in shuffled_data.iterrows():
+            doc = nlp.make_doc(sample['text'])
+            cats = sample['cats'] if isinstance(sample['cats'], dict) else eval(sample['cats'])
+            gold = Example.from_dict(doc, {"cats": cats})
+            nlp.update([gold], sgd=optimizer, drop=0.5)
+    print('\n Training Results: ')
+    report_of_model(nlp, x_train, "Training Step")
+
+    print('second round of training')
+    for epoch in range(num_epochs):
+        shuffled_data = x_val.sample (frac =1, random_state = 42).reset_index(drop=True)
+        for i, sample in shuffled_data.iterrows():
+            doc = nlp.make_doc(sample['text'])
+            cats = sample['cats'] if isinstance(sample['cats'], dict) else eval(sample['cats'])
+            gold = Example.from_dict(doc, {"cats": cats})
+            nlp.update([gold], sgd=optimizer, drop=0.5)
+    print('\n Validation Results')
+    report_of_model(nlp, x_val, "validation Step")
+
+    print('third round of training')
+    for epoch in range(num_epochs):
+        shuffled_data = x_hold.sample (frac =1, random_state = 42).reset_index(drop=True)
+        for i, sample in shuffled_data.iterrows():
+            doc = nlp.make_doc(sample['text'])
+            cats = sample['cats'] if isinstance(sample['cats'], dict) else eval(sample['cats'])
+            gold = Example.from_dict(doc, {"cats": cats})
+            nlp.update([gold], sgd=optimizer, drop=0.5)
+    print('\n Test Results')
+    report_of_model(nlp,x_hold, "Final Test")
+
+    joblib.dump(nlp, "sentiment_model.joblib")
+    return nlp
+
+ ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+    Use the Model
+ ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+       
     ### string input, dictionary output
     def predict_sentiment_string(self, loaded_nlp, text):
         doc = loaded_nlp(text)
