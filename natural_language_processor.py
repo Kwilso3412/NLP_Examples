@@ -48,6 +48,7 @@ class nlp:
     def __init__(self):
         self.kw_model = KeyBERT()
 
+    # single popular words
     def keywords_ngram1(self, texts: list) -> list:
         '''
         Finds keywords of length 1 in the input texts.
@@ -73,7 +74,7 @@ class nlp:
             except Exception as e:
                 keywords.append(None)
         return keywords
-
+    # key phrases
     def keywords_keyphrase(self, texts: list) -> list:
         '''
         Generates keywords of multiple lengths from given text input
