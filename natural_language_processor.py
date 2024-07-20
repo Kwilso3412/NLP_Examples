@@ -331,7 +331,6 @@ class nlp:
     def predict_sentiment_df(loaded_nlp , dataframe):
         results = []
         texts = dataframe['text']
-        cats = dataframe['cats']
         docs = list(loaded_nlp.pipe(texts))
         for docs in docs:
             scores = docs.cats
