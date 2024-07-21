@@ -433,3 +433,7 @@ class nlp:
     train_data_df = pd.DataFrame(new_train_data)
     sentiment_results = predict_sentiment_df(loaded_nlp, train_data_df)
     '''
+
+
+    ### wordcloud
+    # https://medium.com/@m3redithw/wordclouds-with-python-c287887acc8b
