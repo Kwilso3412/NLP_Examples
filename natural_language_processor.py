@@ -115,7 +115,7 @@ class nlp:
     '''
 
     # multi word
-    def keyphrase(self, column_name , texts: list) -> list:
+    def keyphrase(self, texts: list) -> list:
         '''
         Generates keywords of multiple lengths from given text input
             Args:
@@ -149,7 +149,7 @@ class nlp:
                 
         return keyword_phrases
     
-    def keywords_ngram(self, column_name, texts: list) -> list:
+    def keywords_ngram(self, texts: list) -> list:
         '''
         Finds keywords of length 1 in the input texts.
             Args:
